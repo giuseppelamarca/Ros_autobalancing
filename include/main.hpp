@@ -32,8 +32,8 @@
 #define TICKS_2_RPM  ( 60.0 / ((float)TS_VELOCITY_TASK / 1000.0) / FULL_TURN)
 //#define TICKS_2_POS (1 / FULL_TURN * PI)
 
-const char* ssid     = "toya1234568243636";
-const char* password = "08638538";
+const char* ssid     = "********";
+const char* password = "********";
 // Set the rosserial socket server IP address
 IPAddress server(10,3,184,80);
 // Set the rosserial socket server port
