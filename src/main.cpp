@@ -3,7 +3,7 @@
 #include "motor.hpp"
 
 auto pid{PID{0,0,0}};
-Motor<1> motor{DIRECTION_PINA, DIRECTION_PINB, PWM_PIN, PHASE_A, PHASE_B, MAX_VOLTAGE, FULL_TURN};
+Motor<1> motor{DIRECTION_PINA, DIRECTION_PINB, PWM_PIN, PHASE_A, PHASE_B, MAX_VOLTAGE, FULL_TURN, POWER_SUPPLY};
 
 std::array<ros::Publisher, 4> pub_list{
                                         ros::Publisher{"left_wheel", &l_wheel},
@@ -52,6 +52,7 @@ void TaskDisplayVelocity(void *pvParameters)
 {
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;) {
+      Serial.println(motor.getSpeed(millis()));
       vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(TS_VELOCITY_TASK));
     }
 }
@@ -80,18 +81,23 @@ void TaskPositionControl(void *pvParameters)
 void setup() {
   Serial.begin(115200);
 
-  wifi_connect(ssid, password);
+  //wifi_connect(ssid, password);
 
-  ros_init(server, serverPort, nh, pub_list, sub_list);
+  //ros_init(server, serverPort, nh, pub_list, sub_list);
 
   // Create task for FreeRTOS notification
   xTaskCreate(TaskDisplayVelocity, "Velocity Print", 2000, NULL, 1, NULL );
-  xTaskCreate(TaskDisplayPosition, "Position Print", 2000, NULL, 1, NULL );
+  //xTaskCreate(TaskDisplayPosition, "Position Print", 2000, NULL, 1, NULL );
 
   pinMode(LED, OUTPUT);
+  motor.setVoltage(3);
 }
 
 void loop()
 {
-  nh.spinOnce();
+  //nh.spinOnce();
+  auto volt  = Serial.parseFloat();
+  if (volt != 0.0)
+    motor.setVoltage(volt);
+  
 }
