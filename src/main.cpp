@@ -3,7 +3,7 @@
 #include "motor.hpp"
 
 auto pid{PID{0,0,0}};
-Motor<1> motor{DIRECTION_PINA, DIRECTION_PINB, PWM_PIN, PHASE_A, PHASE_B, MAX_VOLTAGE, FULL_TURN};
+Motor<1> motor{DIRECTION_PINA, DIRECTION_PINB, PWM_PIN, PHASE_A, PHASE_B, MAX_VOLTAGE, FULL_TURN, true};
 
 std::array<ros::Publisher, 4> pub_list{
                                         ros::Publisher{"left_wheel", &l_wheel},
@@ -52,6 +52,7 @@ void TaskDisplayVelocity(void *pvParameters)
 {
   TickType_t xLastWakeTime = xTaskGetTickCount();
   for (;;) {
+      Serial.println(motor.getCurrent());
       vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(TS_VELOCITY_TASK));
     }
 }
@@ -83,7 +84,7 @@ void setup() {
   wifi_connect(ssid, password);
 
   ros_init(server, serverPort, nh, pub_list, sub_list);
-
+  motor.init();
   // Create task for FreeRTOS notification
   xTaskCreate(TaskDisplayVelocity, "Velocity Print", 2000, NULL, 1, NULL );
   xTaskCreate(TaskDisplayPosition, "Position Print", 2000, NULL, 1, NULL );
