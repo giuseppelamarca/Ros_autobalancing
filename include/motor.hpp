@@ -13,6 +13,7 @@ Adafruit_INA219 ina219;
 #define POSITION_CONTROLLER 1
 
 #define MAX_VOLTAGE         6
+#define POWER_SUPPLY        7.5
 #define MOTOR_FREQ          1000
 #define MOTOR_CHANNEL       0
 #define MOTOR_RESOLUTION    8
@@ -23,7 +24,7 @@ class Motor: public Encoder<N>{
   int target_controller;
   float target_position, target_speed;
   int direction_pinA, direction_pinB, pwm_pin;
-  float max_voltage, full_rot;
+  float max_voltage, full_rot, power_supply;
   float TICKS_2_POS;
   bool current_sensor;
 
@@ -32,6 +33,11 @@ class Motor: public Encoder<N>{
     if (! ina219.begin())
         Serial.println("Failed to find INA219 chip");
   }
+
+  float actual_speed;
+  int last_cnt;    // last numbet of encode count to calculate speed
+  long unsigned int last_time_ms;   // time im ms of the last time that the speed function was called
+  float VELOCITY;   // constant (modified only in constructor) to pass from ticks/time to rpm
 
   void configurePin(int pin, int mode){
     pinMode(pin, mode);
@@ -62,9 +68,9 @@ class Motor: public Encoder<N>{
   }
 
   public:
-    Motor(int direction_pinA, int direction_pinB, int pwm_pin, int phaseA, int phaseB, float max_voltage, float full_rot, bool current_sensor): Encoder<N>(phaseA, phaseB),
+    Motor(int direction_pinA, int direction_pinB, int pwm_pin, int phaseA, int phaseB, float max_voltage, float full_rot, float power_supply, bool current_sensor): Encoder<N>(phaseA, phaseB),
       direction_pinA(direction_pinA), direction_pinB(direction_pinB), pwm_pin(pwm_pin),
-      max_voltage(max_voltage), full_rot(full_rot), current_sensor(current_sensor)
+      max_voltage(max_voltage), full_rot(full_rot), power_supply(power_supply), current_sensor(current_sensor)
     {
 
     } 
@@ -74,29 +80,43 @@ class Motor: public Encoder<N>{
       configurePin(direction_pinB, OUTPUT);
       configurePwm(pwm_pin, MOTOR_CHANNEL, MOTOR_FREQ, MOTOR_RESOLUTION);
       TICKS_2_POS = 1 / full_rot * PI;
+      VELOCITY = 60/full_rot * 1000;  //60 is for rpm, 1000 is the milliseconds
+
       if (current_sensor){
         initCurrentSensor();
       }
     }
+
 
     void selectController(int controller){}
     void setPosition(float position){}
     void setSpeed(float speed){}
     void setVoltage(float voltage){
       if (voltage >= 0){
+        if (voltage > max_voltage)
+          voltage = max_voltage;
         setPin(direction_pinA, 1);
         setPin(direction_pinB, 0);
-        setPwm(pwm_pin, voltage/max_voltage);
+        setPwm(pwm_pin, voltage/power_supply);
 
       }
       else{
+        if (voltage < -max_voltage)
+          voltage = -max_voltage;
         setPin(direction_pinA, 0);
         setPin(direction_pinB, 1);
-        setPwm(pwm_pin, -voltage/max_voltage);       
+        setPwm(pwm_pin, -voltage/power_supply);       
       }
     }
     float getPosition(){ return this->getCnt() * TICKS_2_POS;}
-    float getSpeed(){ return this->getCnt();}
+
+    float getSpeed(unsigned long int time_ms){ 
+      auto cnt = this->getCnt();
+      this->actual_speed = (float)(cnt - last_cnt) / (float)(time_ms - last_time_ms) * VELOCITY;  
+      last_cnt = cnt;
+      last_time_ms = time_ms;
+      return this->actual_speed;}
+
     float getCurrent(){ return ina219.getCurrent_mA();}
 };
 
