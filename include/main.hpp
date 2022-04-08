@@ -27,8 +27,13 @@
 #define LED        2
 
 #define FULL_TURN  1183.0
-#define TS_VELOCITY_TASK   1000    // 1 s
+#define TS_VELOCITY_TASK   100    // 1 s
 #define TS_POSITION_TASK   250    // 0.5 s
+#define TS_CONTROL_TASK    50      // 0.5 s
+#define TS_PRINT_TASK      5000   // 5 s
+
+#define RECORDED_DATA      1000
+
 #define TICKS_2_RPM  ( 60.0 / ((float)TS_VELOCITY_TASK / 1000.0) / FULL_TURN)
 //#define TICKS_2_POS (1 / FULL_TURN * PI)
 

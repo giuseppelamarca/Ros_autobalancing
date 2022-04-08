@@ -32,6 +32,7 @@ class Motor: public Encoder<N>{
   bool initCurrentSensor(){
     if (! ina219.begin())
         Serial.println("Failed to find INA219 chip");
+    ina219.setCalibration_32V_1A();
   }
 
   float actual_speed;
@@ -55,8 +56,6 @@ class Motor: public Encoder<N>{
     if (value > 1)
       value = 1;
     ledcWrite(MOTOR_CHANNEL, value * 255);
-    Serial.print("PWM: ");
-    Serial.println(value * 255);
   }
 
   void configurePwm(int pin, int channel, int freq, int resolution){
