@@ -8,6 +8,7 @@
 #include <std_msgs/UInt16.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <array>
 #include "ros_util.hpp"
 #include "pid.hpp"
@@ -48,6 +49,9 @@ ros::NodeHandle nh;
 // Make a chatter publisher
 std_msgs::Int16 l_wheel, r_wheel;
 std_msgs::Float32 l_pos, r_pos; 
+std_msgs::Float32MultiArray l_voltage_input, r_voltage_input;
+std_msgs::Float32MultiArray l_velocity, r_velocity; 
+std_msgs::Float32MultiArray l_current, r_current; 
 
 long int cnt = 0;
 long int old_cnt = 0;
